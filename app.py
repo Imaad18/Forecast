@@ -30,326 +30,217 @@ st.set_page_config(
 # Palette: Deep slate + warm gold + cream text
 # Fonts: Playfair Display · IBM Plex Mono · Syne
 # ═══════════════════════════════════════════════════════════════
-# Inject Google Fonts via link tag (avoids CSP blocks on Streamlit Cloud)
+# ═══════════════════════════════════════════════════════════════
+# DESIGN SYSTEM — Safe CSS (only targets custom HTML classes)
+# Dark theme is handled via config.toml
+# ═══════════════════════════════════════════════════════════════
 st.markdown("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
-""", unsafe_allow_html=True)
-
-st.markdown("""
 <style>
 
-:root {
-  --bg-0:        #09090e;
-  --bg-1:        #0e0f17;
-  --bg-2:        #13141e;
-  --bg-3:        #191a26;
-  --border-dim:  #1e2030;
-  --border:      #252840;
-  --gold:        #c8a951;
-  --gold-dim:    rgba(200,169,81,0.12);
-  --gold-glow:   rgba(200,169,81,0.30);
-  --cream:       #e8e2d5;
-  --cream-dim:   #9e9888;
-  --cream-muted: #4a4a5e;
-  --green:       #3ecf8e;
-  --green-dim:   rgba(62,207,142,0.12);
-  --red:         #f25f5c;
-  --red-dim:     rgba(242,95,92,0.12);
-  --blue:        #5b8dee;
-  --blue-dim:    rgba(91,141,238,0.12);
-  --amber:       #f0a500;
-  --shadow:      0 4px 24px rgba(0,0,0,0.5);
-}
+/* ── Only custom component classes — no Streamlit overrides ── */
 
-html, body { background-color: var(--bg-0) !important; }
-.stApp { background-color: var(--bg-0) !important; font-family: 'Syne', sans-serif !important; color: var(--cream) !important; }
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-1); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-section[data-testid="stSidebar"] {
-  background: var(--bg-1) !important;
-  border-right: 1px solid var(--border-dim) !important;
-  padding-top: 0 !important;
-}
-section[data-testid="stSidebar"] > div { padding-top: 0 !important; }
-section[data-testid="stSidebar"] * { color: var(--cream) !important; }
-
-.main .block-container { padding: 0 2.5rem 4rem !important; max-width: 1600px !important; }
-
-.fincast-topbar {
-  background: var(--bg-1);
-  border-bottom: 1px solid var(--border-dim);
-  padding: 0.85rem 2.5rem;
-  margin: 0 -2.5rem 2rem;
+.fc-topbar {
+  background: #0e0f17;
+  border: 1px solid #1e2030;
+  border-radius: 8px;
+  padding: 0.85rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 1.5rem;
 }
-.fincast-logo-mark {
+.fc-logo {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
-  color: var(--cream);
+  color: #e8e2d5;
 }
-.fincast-logo-mark span { color: var(--gold); }
-.fincast-logo-tag {
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--cream-dim);
-  border-left: 1px solid var(--border);
-  padding-left: 0.6rem;
-  margin-left: 0.75rem;
+.fc-logo span { color: #c8a951; }
+.fc-tag {
+  font-size: 0.6rem; font-weight: 600; letter-spacing: 0.14em;
+  text-transform: uppercase; color: #4a4a5e;
+  border-left: 1px solid #252840; padding-left: 0.65rem; margin-left: 0.75rem;
 }
-.fincast-meta {
+.fc-meta {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--cream-muted);
-  text-align: right;
-  line-height: 1.6;
-}
-
-.sidebar-brand {
-  background: linear-gradient(135deg, var(--bg-2), var(--bg-3));
-  border-bottom: 1px solid var(--border-dim);
-  padding: 1.25rem 1.5rem 1rem;
-  margin-bottom: 0.5rem;
-}
-.sidebar-brand-title {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--cream);
-}
-.sidebar-brand-title em { color: var(--gold); font-style: normal; }
-.sidebar-brand-sub {
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--cream-muted);
-  margin-top: 0.15rem;
-}
-
-.sb-section {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold);
-  padding: 1rem 1.5rem 0.3rem;
-  display: block;
+  font-size: 0.68rem; color: #4a4a5e; text-align: right; line-height: 1.6;
 }
 
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(5,1fr);
-  gap: 1px;
-  background: var(--border-dim);
-  border: 1px solid var(--border-dim);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 2rem;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 1px; background: #1e2030;
+  border: 1px solid #1e2030; border-radius: 8px;
+  overflow: hidden; margin-bottom: 1.5rem;
 }
 .kpi-cell {
-  background: var(--bg-1);
-  padding: 1.1rem 1.25rem 1rem;
+  background: #0e0f17;
+  padding: 1rem 1.2rem 0.9rem;
   position: relative;
-  transition: background 0.2s;
 }
-.kpi-cell:hover { background: var(--bg-2); }
-.kpi-cell.accent::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--gold);
+.kpi-cell.hi::after {
+  content:''; position: absolute;
+  bottom:0; left:0; right:0; height:2px; background:#c8a951;
 }
-.kpi-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--cream-muted);
-  margin-bottom: 0.5rem;
+.kpi-lbl {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: #4a4a5e; margin-bottom: 0.45rem;
 }
-.kpi-value {
+.kpi-val {
   font-family: 'IBM Plex Mono', monospace;
-  font-size: 1.55rem;
-  font-weight: 400;
-  color: var(--cream);
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-size: 1.45rem; font-weight: 400;
+  color: #e8e2d5; line-height: 1;
 }
-.kpi-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.7rem; margin-top: 0.35rem; }
-.pos { color: var(--green); }
-.neg { color: var(--red); }
-.neu { color: var(--cream-dim); }
-.warn { color: var(--amber); }
+.kpi-sub { font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem; margin-top: 0.3rem; }
+.c-pos  { color: #3ecf8e !important; }
+.c-neg  { color: #f25f5c !important; }
+.c-neu  { color: #9e9888 !important; }
+.c-warn { color: #f0a500 !important; }
 
-.sec-div { display: flex; align-items: center; gap: 0.75rem; margin: 2rem 0 1rem; }
-.sec-div-label {
-  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.18em;
-  text-transform: uppercase; color: var(--gold); white-space: nowrap;
+.fc-divider {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin: 1.75rem 0 0.75rem;
 }
-.sec-div-line { flex: 1; height: 1px; background: var(--border-dim); }
-
-.panel {
-  background: var(--bg-1);
-  border: 1px solid var(--border-dim);
-  border-radius: 8px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 1rem;
+.fc-div-lbl {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.17em; text-transform: uppercase;
+  color: #c8a951; white-space: nowrap;
 }
+.fc-div-line { flex:1; height:1px; background:#1e2030; }
 
-.analyst-note {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--gold);
+.fc-panel {
+  background: #0e0f17;
+  border: 1px solid #1e2030;
   border-radius: 6px;
-  padding: 0.9rem 1.2rem;
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 0.75rem;
+}
+
+.fc-note {
+  background: #13141e;
+  border: 1px solid #252840;
+  border-left: 3px solid #c8a951;
+  border-radius: 5px;
+  padding: 0.85rem 1.1rem;
   margin: 0.75rem 0;
-  font-size: 0.83rem;
-  color: var(--cream-dim);
-  line-height: 1.7;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.81rem; color: #9e9888; line-height: 1.7;
 }
-.analyst-note strong { color: var(--cream); }
-.note-head {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem;
+.fc-note strong { color: #e8e2d5; }
+.fc-note-head {
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.13em; text-transform: uppercase;
+  color: #c8a951; margin-bottom: 0.35rem;
 }
 
-.signal-box {
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  margin: 0.4rem 0;
-  font-size: 0.82rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
+.fc-signal {
+  border-radius: 5px; padding: 0.7rem 0.95rem;
+  margin: 0.35rem 0; font-family: 'Syne', sans-serif;
+  font-size: 0.8rem; display: flex;
+  align-items: flex-start; gap: 0.55rem;
 }
-.signal-box.bullish { background: var(--green-dim); border: 1px solid rgba(62,207,142,0.2); }
-.signal-box.bearish { background: var(--red-dim);   border: 1px solid rgba(242,95,92,0.2); }
-.signal-box.neutral { background: var(--bg-2);      border: 1px solid var(--border); }
-.signal-box.caution { background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.2); }
-.signal-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
-.signal-text { color: var(--cream-dim); line-height: 1.55; }
-.signal-text strong { color: var(--cream); }
+.fc-signal.bull { background: rgba(62,207,142,0.08); border: 1px solid rgba(62,207,142,0.18); }
+.fc-signal.bear { background: rgba(242,95,92,0.08);  border: 1px solid rgba(242,95,92,0.18); }
+.fc-signal.neut { background: #13141e;               border: 1px solid #252840; }
+.fc-signal.caut { background: rgba(240,165,0,0.07);  border: 1px solid rgba(240,165,0,0.18); }
+.fc-sig-icon { font-size: 0.95rem; flex-shrink:0; margin-top:0.05rem; }
+.fc-sig-txt  { color: #9e9888; line-height: 1.5; }
+.fc-sig-txt strong { color: #e8e2d5; }
 
-.anom-row {
+.fc-anom {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.5rem 0.9rem; border-radius: 4px;
-  background: rgba(242,95,92,0.07); border-left: 2px solid var(--red);
-  margin: 0.2rem 0;
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.77rem;
+  padding: 0.45rem 0.85rem; border-radius: 4px;
+  background: rgba(242,95,92,0.06); border-left: 2px solid #f25f5c;
+  margin: 0.18rem 0; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
 }
-.anom-date { color: var(--cream-muted); }
-.anom-val  { color: var(--cream); }
-.anom-dev  { color: var(--red); font-weight: 500; }
+.fc-anom-d { color: #4a4a5e; }
+.fc-anom-v { color: #e8e2d5; }
+.fc-anom-x { color: #f25f5c; font-weight: 500; }
 
-.lb-table { width: 100%; border-collapse: collapse; }
-.lb-table th {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--cream-muted);
-  padding: 0.6rem 1rem; text-align: left;
-  border-bottom: 1px solid var(--border-dim); background: var(--bg-2);
+.fc-lb-table { width: 100%; border-collapse: collapse; }
+.fc-lb-table th {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.58rem; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: #4a4a5e;
+  padding: 0.55rem 0.9rem; text-align: left;
+  border-bottom: 1px solid #1e2030; background: #13141e;
 }
-.lb-table td {
-  padding: 0.65rem 1rem; border-bottom: 1px solid var(--border-dim);
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; color: var(--cream);
+.fc-lb-table td {
+  padding: 0.6rem 0.9rem; border-bottom: 1px solid #1e2030;
+  font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; color: #e8e2d5;
 }
-.lb-table tr:last-child td { border-bottom: none; }
-.lb-table tr.lb-winner td { background: rgba(200,169,81,0.06); }
-.lb-table tr:hover td { background: var(--bg-2); }
-.lb-rank {
+.fc-lb-table tr:last-child td { border-bottom: none; }
+.fc-lb-table tr.fc-winner td { background: rgba(200,169,81,0.05); }
+
+.fc-rank {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 20px; height: 20px; border-radius: 50%;
-  font-size: 0.65rem; font-weight: 700; margin-right: 0.5rem;
-  background: var(--border); color: var(--cream-dim);
+  width: 18px; height: 18px; border-radius: 50%;
+  font-size: 0.62rem; font-weight: 700; margin-right: 0.4rem;
+  background: #252840; color: #9e9888;
 }
-.lb-rank.gold   { background: var(--gold); color: #000; }
-.lb-rank.silver { background: #8a8a9a; color: #000; }
-.lb-rank.bronze { background: #8b6914; color: #fff; }
-.model-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+.fc-rank.g { background: #c8a951; color: #000; }
+.fc-rank.s { background: #8a8a9a; color: #000; }
+.fc-rank.b { background: #8b6914; color: #fff; }
+.fc-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:0.4rem; }
 
-.stat-row {
+.fc-stat {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 0.45rem 0; border-bottom: 1px solid var(--border-dim); font-size: 0.82rem;
+  padding: 0.42rem 0; border-bottom: 1px solid #1e2030;
+  font-family: 'Syne', sans-serif; font-size: 0.79rem;
 }
-.stat-row:last-child { border-bottom: none; }
-.stat-key { color: var(--cream-muted); }
-.stat-val { font-family: 'IBM Plex Mono', monospace; color: var(--cream); }
+.fc-stat:last-child { border-bottom: none; }
+.fc-stat-k { color: #9e9888; }
+.fc-stat-v { font-family: 'IBM Plex Mono', monospace; color: #e8e2d5; }
 
-.export-card {
-  background: var(--bg-1); border: 1px solid var(--border-dim);
-  border-radius: 8px; padding: 1.25rem 1.5rem; height: 100%;
+.fc-badge {
+  display: inline-block; padding: 1px 8px; border-radius: 3px;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.6rem; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
 }
-.export-card-title { font-size: 0.78rem; font-weight: 700; color: var(--cream); margin-bottom: 0.35rem; }
-.export-card-desc  { font-size: 0.76rem; color: var(--cream-muted); line-height: 1.55; margin-bottom: 1rem; }
+.fc-badge-gold  { background: rgba(200,169,81,0.12); color: #c8a951; border: 1px solid rgba(200,169,81,0.28); }
+.fc-badge-green { background: rgba(62,207,142,0.1);  color: #3ecf8e; border: 1px solid rgba(62,207,142,0.22); }
 
-.badge {
-  display: inline-block; padding: 1px 9px; border-radius: 3px;
-  font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+.fc-empty {
+  text-align: center; padding: 4rem 2rem;
+  font-family: 'Syne', sans-serif;
 }
-.badge-gold    { background: var(--gold-dim); color: var(--gold); border: 1px solid var(--gold-glow); }
-.badge-green   { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.25); }
-.badge-neutral { background: var(--bg-3); color: var(--cream-dim); border: 1px solid var(--border); }
+.fc-empty-ico { font-size: 2.2rem; opacity: 0.25; margin-bottom: 0.9rem; }
+.fc-empty-msg { font-size: 0.88rem; color: #9e9888; }
+.fc-empty-sub { font-size: 0.74rem; color: #4a4a5e; margin-top: 0.35rem; }
 
-.empty-state { text-align: center; padding: 5rem 2rem; }
-.empty-state-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.3; }
-.empty-state-msg  { font-size: 0.9rem; color: var(--cream-muted); }
-.empty-state-sub  { font-size: 0.76rem; color: var(--cream-muted); opacity: 0.5; margin-top: 0.4rem; }
+.fc-export-card {
+  background: #0e0f17; border: 1px solid #1e2030;
+  border-radius: 6px; padding: 1.2rem 1.3rem;
+}
+.fc-export-title { font-family: 'Syne', sans-serif; font-size: 0.78rem; font-weight: 700; color: #e8e2d5; margin-bottom: 0.3rem; }
+.fc-export-desc  { font-family: 'Syne', sans-serif; font-size: 0.74rem; color: #9e9888; line-height: 1.5; margin-bottom: 0.9rem; }
 
-div.stTabs [data-baseweb="tab-list"] {
-  background: var(--bg-1) !important; border-bottom: 1px solid var(--border-dim) !important;
-  gap: 0 !important; padding: 0 !important;
+.sb-brand {
+  background: #13141e; border-bottom: 1px solid #1e2030;
+  padding: 1.1rem 1.3rem 0.9rem; margin-bottom: 0.25rem;
 }
-div.stTabs [data-baseweb="tab"] {
-  background: transparent !important; color: var(--cream-muted) !important;
-  font-family: 'Syne', sans-serif !important; font-weight: 500 !important;
-  font-size: 0.78rem !important; letter-spacing: 0.05em !important;
-  padding: 0.75rem 1.5rem !important; border-radius: 0 !important;
-  border-bottom: 2px solid transparent !important;
+.sb-brand-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem; font-weight: 700; color: #e8e2d5;
 }
-div.stTabs [aria-selected="true"] {
-  color: var(--gold) !important; border-bottom: 2px solid var(--gold) !important;
-  background: rgba(200,169,81,0.05) !important;
+.sb-brand-title em { color: #c8a951; font-style: normal; }
+.sb-brand-sub {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.58rem; font-weight: 600;
+  letter-spacing: 0.11em; text-transform: uppercase; color: #4a4a5e; margin-top: 0.12rem;
 }
-div.stTabs [data-baseweb="tab"]:hover { color: var(--cream) !important; background: var(--bg-2) !important; }
-
-.stButton > button {
-  background: var(--gold) !important; color: #0a0a0f !important;
-  font-family: 'Syne', sans-serif !important; font-weight: 700 !important;
-  font-size: 0.78rem !important; letter-spacing: 0.1em !important;
-  text-transform: uppercase !important; border: none !important;
-  border-radius: 4px !important; padding: 0.6rem 1.5rem !important; width: 100% !important;
-}
-.stButton > button:hover { opacity: 0.85 !important; }
-
-.stSelectbox > div > div, .stMultiSelect > div > div {
-  background: var(--bg-2) !important; border: 1px solid var(--border) !important;
-  border-radius: 4px !important; color: var(--cream) !important; font-size: 0.82rem !important;
+.sb-sec {
+  font-family: 'Syne', sans-serif;
+  font-size: 0.58rem; font-weight: 700;
+  letter-spacing: 0.17em; text-transform: uppercase;
+  color: #c8a951; padding: 0.9rem 0 0.25rem; display: block;
 }
 
-div[data-testid="stFileUploader"] {
-  background: var(--bg-2) !important; border: 1px dashed var(--border) !important; border-radius: 6px !important;
-}
-.stCheckbox label { font-size: 0.8rem !important; color: var(--cream-dim) !important; }
-
-div[data-testid="stDownloadButton"] > button {
-  background: transparent !important; color: var(--gold) !important;
-  border: 1px solid var(--gold-glow) !important;
-  font-size: 0.76rem !important; letter-spacing: 0.08em !important;
-  padding: 0.45rem 1rem !important; width: auto !important;
-}
-div[data-testid="stDownloadButton"] > button:hover { background: var(--gold-dim) !important; opacity: 1 !important; }
-
-#MainMenu, footer, header { visibility: hidden; }
-hr { border-color: var(--border-dim) !important; margin: 1.5rem 0 !important; }
+.fc-mdot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:0.45rem; flex-shrink:0; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -696,22 +587,22 @@ def fig_fit(df, insample_dict):
 # ═══════════════════════════════════════════════════════════════
 
 def sec(label):
-    st.markdown(f'<div class="sec-div"><span class="sec-div-label">{label}</span><div class="sec-div-line"></div></div>',
+    st.markdown(f'<div class="fc-divider"><span class="fc-div-lbl">{label}</span><div class="fc-div-line"></div></div>',
                 unsafe_allow_html=True)
 
 def stat(k,v):
-    return f'<div class="stat-row"><span class="stat-key">{k}</span><span class="stat-val">{v}</span></div>'
+    return f'<div class="fc-stat"><span class="fc-stat-k">{k}</span><span class="fc-stat-v">{v}</span></div>'
 
 def note(content, head="Analyst Note"):
-    st.markdown(f'<div class="analyst-note"><div class="note-head">◈ {head}</div>{content}</div>',
+    st.markdown(f'<div class="fc-note"><div class="fc-note-head">◈ {head}</div>{content}</div>',
                 unsafe_allow_html=True)
 
 def sig(kind, icon, text):
-    st.markdown(f'<div class="signal-box {kind}"><span class="signal-icon">{icon}</span><span class="signal-text">{text}</span></div>',
+    st.markdown(f'<div class="fc-signal {kind}"><span class="fc-sig-icon">{icon}</span><span class="fc-sig-txt">{text}</span></div>',
                 unsafe_allow_html=True)
 
 def empty(msg, sub=""):
-    st.markdown(f'<div class="empty-state"><div class="empty-state-icon">◈</div><div class="empty-state-msg">{msg}</div><div class="empty-state-sub">{sub}</div></div>',
+    st.markdown(f'<div class="fc-empty"><div class="fc-empty-ico">◈</div><div class="fc-empty-msg">{msg}</div><div class="fc-empty-sub">{sub}</div></div>',
                 unsafe_allow_html=True)
 
 def to_csv(df): return df.to_csv(index=False).encode()
@@ -729,12 +620,12 @@ def to_excel(sheets):
 def sidebar():
     with st.sidebar:
         st.markdown("""
-        <div class="sidebar-brand">
-          <div class="sidebar-brand-title">Fin<em>Cast</em> Pro</div>
-          <div class="sidebar-brand-sub">Institutional Forecasting Platform</div>
+        <div class="sb-brand">
+          <div class="sb-brand-title">Fin<em>Cast</em> Pro</div>
+          <div class="sb-brand-sub">Institutional Forecasting Platform</div>
         </div>""", unsafe_allow_html=True)
 
-        st.markdown('<span class="sb-section">Data Source</span>', unsafe_allow_html=True)
+        st.markdown('<span class="sb-sec">Data Source</span>', unsafe_allow_html=True)
         mode = st.radio("Data Source",["Upload CSV","Use Sample Data"],label_visibility="collapsed")
 
         df = None
@@ -744,7 +635,7 @@ def sidebar():
             if f:
                 try:
                     df = pd.read_csv(f, parse_dates=["ds"]).sort_values("ds").reset_index(drop=True)
-                    st.markdown(f'<span class="badge badge-green">✓ {len(df):,} rows loaded</span>',
+                    st.markdown(f'<span class="fc-badge fc-badge-green">✓ {len(df):,} rows loaded</span>',
                                 unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"Parse error: {e}")
@@ -752,12 +643,12 @@ def sidebar():
             sample = st.selectbox("Dataset",["Monthly Revenue","Stock / Asset Price"],
                                   label_visibility="collapsed")
             df = gen_revenue() if "Revenue" in sample else gen_stock()
-            st.markdown(f'<span class="badge badge-gold">Sample · {len(df):,} rows</span>',
+            st.markdown(f'<span class="fc-badge fc-badge-gold">Sample · {len(df):,} rows</span>',
                         unsafe_allow_html=True)
 
         if df is None: st.stop()
 
-        st.markdown('<span class="sb-section">Forecast Parameters</span>', unsafe_allow_html=True)
+        st.markdown('<span class="sb-sec">Forecast Parameters</span>', unsafe_allow_html=True)
         freq_map  = {"Monthly":"MS","Quarterly":"QS","Weekly":"W","Daily (Biz)":"B"}
         freq_lbl  = st.selectbox("Frequency", list(freq_map.keys()))
         freq      = freq_map[freq_lbl]
@@ -765,7 +656,7 @@ def sidebar():
         def_h     = {"MS":12,"QS":4,"W":26,"B":63}[freq]
         horizon   = st.slider("Horizon (periods)", 1, max_h, def_h)
 
-        st.markdown('<span class="sb-section">Models</span>', unsafe_allow_html=True)
+        st.markdown('<span class="sb-sec">Models</span>', unsafe_allow_html=True)
         c1,c2 = st.columns(2)
         with c1:
             use_p = st.checkbox("Prophet",  value=True)
@@ -776,14 +667,14 @@ def sidebar():
 
         n_sims = st.select_slider("MC Simulations",[500,1000,2000,5000],value=1000) if use_m else 1000
 
-        st.markdown('<span class="sb-section">Scenario Planning</span>', unsafe_allow_html=True)
+        st.markdown('<span class="sb-sec">Scenario Planning</span>', unsafe_allow_html=True)
         scenario  = st.select_slider("Scenario",["Stress","Bear","Base","Bull","Upside"],value="Base")
         mc_scen   = {"Stress":"worst","Bear":"worst","Base":"base","Bull":"best","Upside":"best"}[scenario]
         scol      = {"Stress":"#f25f5c","Bear":"#f0a500","Base":"#c8a951","Bull":"#3ecf8e","Upside":"#5b8dee"}[scenario]
         st.markdown(f'<div style="margin-top:0.3rem;"><span class="badge" style="background:rgba(0,0,0,0.3);color:{scol};border:1px solid {scol}40;letter-spacing:0.1em;">{scenario.upper()}</span></div>',
                     unsafe_allow_html=True)
 
-        st.markdown('<span class="sb-section">Anomaly Detection</span>', unsafe_allow_html=True)
+        st.markdown('<span class="sb-sec">Anomaly Detection</span>', unsafe_allow_html=True)
         iqr_factor = st.slider("IQR Sensitivity", 1.0, 4.0, 2.0, 0.5)
 
         st.markdown("---")
@@ -801,7 +692,7 @@ def main():
     # Top Bar
     now = datetime.now()
     st.markdown(f"""
-    <div class="fincast-topbar">
+    <div class="fc-topbar">
       <div style="display:flex;align-items:baseline;gap:0.75rem;">
         <span class="fincast-logo-mark">Fin<span>Cast</span> Pro</span>
         <span class="fincast-logo-tag">Institutional Forecasting</span>
@@ -831,30 +722,30 @@ def main():
 
     st.markdown(f"""
     <div class="kpi-grid">
-      <div class="kpi-cell accent">
-        <div class="kpi-label">Latest Value</div>
-        <div class="kpi-value">{s.iloc[-1]:,.0f}</div>
-        <div class="kpi-sub {rc}">{"▲" if r_chg>=0 else "▼"} {abs(r_chg):.2f}% prior period</div>
+      <div class="kpi-cell hi">
+        <div class="kpi-lbl">Latest Value</div>
+        <div class="kpi-val">{s.iloc[-1]:,.0f}</div>
+        <div class="kpi-sub {rc_cls}">{"▲" if r_chg>=0 else "▼"} {abs(r_chg):.2f}% prior period</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">Period Return</div>
-        <div class="kpi-value {pc}">{p_chg:+.1f}%</div>
-        <div class="kpi-sub neu">{len(s):,} observations</div>
+        <div class="kpi-lbl">Period Return</div>
+        <div class="kpi-val " + ('c-pos' if p_chg>=0 else 'c-neg')>{p_chg:+.1f}%</div>
+        <div class="kpi-sub c-neu">{len(s):,} observations</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">CAGR</div>
-        <div class="kpi-value">{_cagr:.1f}%</div>
-        <div class="kpi-sub neu">Annualised growth</div>
+        <div class="kpi-lbl">CAGR</div>
+        <div class="kpi-val">{_cagr:.1f}%</div>
+        <div class="kpi-sub c-neu">Annualised growth</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">Max Drawdown</div>
-        <div class="kpi-value {dc}">{_mdd:.1f}%</div>
-        <div class="kpi-sub neu">Peak-to-trough</div>
+        <div class="kpi-lbl">Max Drawdown</div>
+        <div class="kpi-val " + ('c-neg' if _mdd<-10 else 'c-neu')>{_mdd:.1f}%</div>
+        <div class="kpi-sub c-neu">Peak-to-trough</div>
       </div>
       <div class="kpi-cell">
-        <div class="kpi-label">Sharpe Ratio</div>
-        <div class="kpi-value {sc2}">{_sh:.2f}</div>
-        <div class="kpi-sub {ac}">{"⚠ " + str(n_an) + " anomaly" + ("" if n_an==1 else "ies") if n_an else "✓ Clean data"}</div>
+        <div class="kpi-lbl">Sharpe Ratio</div>
+        <div class="kpi-val " + ('c-pos' if _sh>=1 else ('c-warn' if _sh>=0 else 'c-neg'))>{_sh:.2f}</div>
+        <div class="kpi-sub {ac_cls}">{"⚠ " + str(n_an) + " anomaly" + ("" if n_an==1 else "ies") if n_an else "✓ Clean data"}</div>
       </div>
     </div>""", unsafe_allow_html=True)
 
@@ -894,7 +785,7 @@ def main():
                 stat("Max Drawdown",  f"{_mdd:.2f}%"),
                 stat("Sharpe Ratio",  f"{_sh:.3f}"),
             ])
-            st.markdown(f'<div class="panel">{html}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="fc-panel">{html}</div>', unsafe_allow_html=True)
 
         cc,cd = st.columns([2,3])
         with cc:
@@ -908,9 +799,9 @@ def main():
                 adf = df[mask].copy()
                 adf["pct_dev"] = (adf["y"]-s.mean())/s.mean()*100
                 rows="".join([
-                    f'<div class="anom-row"><span class="anom-date">{r["ds"].strftime("%Y-%m-%d")}</span>'
-                    f'<span class="anom-val">{r["y"]:,.0f}</span>'
-                    f'<span class="anom-dev">{r["pct_dev"]:+.1f}% vs μ</span></div>'
+                    f'<div class="fc-anom"><span class="fc-anom-d">{r["ds"].strftime("%Y-%m-%d")}</span>'
+                    f'<span class="fc-anom-v">{r["y"]:,.0f}</span>'
+                    f'<span class="fc-anom-x">{r["pct_dev"]:+.1f}% vs μ</span></div>'
                     for _,r in adf.iterrows()
                 ])
                 st.markdown(f'<div style="max-height:230px;overflow-y:auto;">{rows}</div>',
@@ -984,9 +875,9 @@ def main():
             t_chg = (t_val-s.iloc[-1])/s.iloc[-1]*100
             col   = model_color(name)
             cols[i].markdown(f"""
-            <div class="panel" style="border-left:3px solid {col};padding:1rem 1.1rem;">
-              <div class="kpi-label">{name}</div>
-              <div class="kpi-value" style="font-size:1.2rem;">{t_val:,.0f}</div>
+            <div class="fc-panel" style="border-left:3px solid {col};padding:1rem 1.1rem;">
+              <div class="kpi-lbl">{name}</div>
+              <div class="kpi-val" style="font-size:1.2rem;">{t_val:,.0f}</div>
               <div class="kpi-sub {'pos' if t_chg>=0 else 'neg'}">{"▲" if t_chg>=0 else "▼"} {abs(t_chg):.1f}%</div>
               <div style="font-size:0.63rem;color:var(--cream-muted);margin-top:0.25rem;">{horizon}p · {scenario}</div>
             </div>""", unsafe_allow_html=True)
@@ -1061,7 +952,7 @@ def main():
                 stat("Simulations",     f"{n_sims:,}"),
                 stat("Scenario",        scenario),
             ])
-            st.markdown(f'<div class="panel">{rh}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="fc-panel">{rh}</div>', unsafe_allow_html=True)
 
             sec("Percentile Table")
             pdf = pd.DataFrame({
@@ -1114,18 +1005,20 @@ def main():
             sc=scores[name]
             col=model_color(name)
             conf=max(0,min(100,100-sc["MAPE"]*5))
-            best_tag='<span class="badge badge-gold" style="margin-left:0.5rem;">BEST FIT</span>' if i==0 else ""
-            rows_html+=f"""<tr {"class='lb-winner'" if i==0 else ""}>
-              <td><span class="lb-rank {icons[i] if i<3 else ''}  ">{i+1}</span>
-                  <span class="model-dot" style="background:{col};"></span>{name}{best_tag}</td>
+            best_tag='<span class="fc-badge fc-badge-gold" style="margin-left:0.5rem;">BEST FIT</span>' if i==0 else ""
+            win_cls = 'class="fc-winner"' if i==0 else ""
+            rank_cls = icons[i] if i<3 else ""
+            rows_html += f"""<tr {win_cls}>
+              <td><span class="fc-rank {rank_cls}">{i+1}</span>
+                  <span class="fc-dot" style="background:{col};"></span>{name}{best_tag}</td>
               <td>{sc['MAPE']:.3f}%</td><td>{sc['sMAPE']:.3f}%</td><td>{sc['RMSE']:,.2f}</td>
               <td><div style="display:flex;align-items:center;gap:6px;">
                 <div style="width:{conf:.0f}px;height:4px;background:{col};border-radius:2px;max-width:80px;"></div>
-                <span style="font-size:0.7rem;color:var(--cream-muted);">{conf:.0f}/100</span>
+                <span style="font-size:0.7rem;color:#4a4a5e;">{conf:.0f}/100</span>
               </div></td></tr>"""
         st.markdown(f"""
-        <div class="panel">
-          <table class="lb-table">
+        <div class="fc-panel">
+          <table class="fc-lb-table">
             <thead><tr><th>Model</th><th>MAPE (%)</th><th>sMAPE (%)</th><th>RMSE</th><th>Confidence</th></tr></thead>
             <tbody>{rows_html}</tbody>
           </table>
@@ -1164,9 +1057,9 @@ def main():
 
         c1,c2,c3 = st.columns(3)
         with c1:
-            st.markdown('<div class="export-card">', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-title">📄 Forecast Table — CSV</div>', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-desc">All models with confidence intervals. Compatible with Excel, Tableau, PowerBI, and Python.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-card">', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-title">📄 Forecast Table — CSV</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-desc">All models with confidence intervals. Compatible with Excel, Tableau, PowerBI, and Python.</div>', unsafe_allow_html=True)
             if tbl is not None:
                 st.download_button("↓ Download CSV", to_csv(tbl),
                                    f"FinCast_Forecast_{ds}.csv","text/csv")
@@ -1175,17 +1068,17 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
         with c2:
-            st.markdown('<div class="export-card">', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-title">📊 Historical Data — CSV</div>', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-desc">Cleaned historical series with anomaly flags. Ready for audit trail and data lineage.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-card">', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-title">📊 Historical Data — CSV</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-desc">Cleaned historical series with anomaly flags. Ready for audit trail and data lineage.</div>', unsafe_allow_html=True)
             st.download_button("↓ Download CSV", to_csv(hist_exp),
                                f"FinCast_Historical_{ds}.csv","text/csv")
             st.markdown('</div>', unsafe_allow_html=True)
 
         with c3:
-            st.markdown('<div class="export-card">', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-title">📁 Full Report — Excel</div>', unsafe_allow_html=True)
-            st.markdown('<div class="export-card-desc">Multi-sheet workbook: Historical · Forecast · Model Scores · MC Summary. Board-deck ready.</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-card">', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-title">📁 Full Report — Excel</div>', unsafe_allow_html=True)
+            st.markdown('<div class="fc-export-desc">Multi-sheet workbook: Historical · Forecast · Model Scores · MC Summary. Board-deck ready.</div>', unsafe_allow_html=True)
             if tbl is not None:
                 sheets={"Historical":hist_exp,"Forecast":tbl}
                 sc=st.session_state.get("scores",{})
