@@ -10,6 +10,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import warnings
 import io
+import copy
 from datetime import datetime
 
 warnings.filterwarnings("ignore")
@@ -29,9 +30,15 @@ st.set_page_config(
 # Palette: Deep slate + warm gold + cream text
 # Fonts: Playfair Display · IBM Plex Mono · Syne
 # ═══════════════════════════════════════════════════════════════
+# Inject Google Fonts via link tag (avoids CSP blocks on Streamlit Cloud)
+st.markdown("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+""", unsafe_allow_html=True)
+
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap');
 
 :root {
   --bg-0:        #09090e;
@@ -56,7 +63,7 @@ st.markdown("""
   --shadow:      0 4px 24px rgba(0,0,0,0.5);
 }
 
-html, body, [class*="css"], .stApp {
+html, body, .stApp, .stApp > div {
   font-family: 'Syne', sans-serif !important;
   background-color: var(--bg-0) !important;
   color: var(--cream) !important;
@@ -352,7 +359,6 @@ hr { border-color: var(--border-dim) !important; margin: 1.5rem 0 !important; }
 # ═══════════════════════════════════════════════════════════════
 # CHART CONFIG
 # ═══════════════════════════════════════════════════════════════
-import copy
 
 _BASE_LAYOUT = dict(
     paper_bgcolor="#09090e", plot_bgcolor="#09090e",
