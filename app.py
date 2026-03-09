@@ -63,11 +63,8 @@ st.markdown("""
   --shadow:      0 4px 24px rgba(0,0,0,0.5);
 }
 
-html, body, .stApp, .stApp > div {
-  font-family: 'Syne', sans-serif !important;
-  background-color: var(--bg-0) !important;
-  color: var(--cream) !important;
-}
+html, body { background-color: var(--bg-0) !important; }
+.stApp { background-color: var(--bg-0) !important; font-family: 'Syne', sans-serif !important; color: var(--cream) !important; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg-1); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
@@ -738,7 +735,7 @@ def sidebar():
         </div>""", unsafe_allow_html=True)
 
         st.markdown('<span class="sb-section">Data Source</span>', unsafe_allow_html=True)
-        mode = st.radio("",["Upload CSV","Use Sample Data"],label_visibility="collapsed")
+        mode = st.radio("Data Source",["Upload CSV","Use Sample Data"],label_visibility="collapsed")
 
         df = None
         if mode == "Upload CSV":
@@ -780,7 +777,7 @@ def sidebar():
         n_sims = st.select_slider("MC Simulations",[500,1000,2000,5000],value=1000) if use_m else 1000
 
         st.markdown('<span class="sb-section">Scenario Planning</span>', unsafe_allow_html=True)
-        scenario  = st.select_slider("",["Stress","Bear","Base","Bull","Upside"],value="Base")
+        scenario  = st.select_slider("Scenario",["Stress","Bear","Base","Bull","Upside"],value="Base")
         mc_scen   = {"Stress":"worst","Bear":"worst","Base":"base","Bull":"best","Upside":"best"}[scenario]
         scol      = {"Stress":"#f25f5c","Bear":"#f0a500","Base":"#c8a951","Bull":"#3ecf8e","Upside":"#5b8dee"}[scenario]
         st.markdown(f'<div style="margin-top:0.3rem;"><span class="badge" style="background:rgba(0,0,0,0.3);color:{scol};border:1px solid {scol}40;letter-spacing:0.1em;">{scenario.upper()}</span></div>',
