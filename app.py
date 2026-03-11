@@ -118,12 +118,22 @@ def _off(freq):
     try: return pd.tseries.frequencies.to_offset(freq)
     except: return pd.DateOffset(months=1)
 
-def run_prophet(df, horizon, freq):
+@st.cache_data(show_spinner=False)
+def run_prophet(df_hash, df, horizon, freq):
     try:
         from prophet import Prophet
-        m = Prophet(yearly_seasonality=True, weekly_seasonality=False,
-                    daily_seasonality=False, interval_width=0.90,
-                    changepoint_prior_scale=0.05)
+        import logging
+        logging.getLogger("prophet").setLevel(logging.ERROR)
+        logging.getLogger("cmdstanpy").setLevel(logging.ERROR)
+        m = Prophet(
+            yearly_seasonality=6,        # fewer Fourier terms = faster
+            weekly_seasonality=False,
+            daily_seasonality=False,
+            interval_width=0.90,
+            changepoint_prior_scale=0.05,
+            n_changepoints=15,           # default 25 → 15
+            uncertainty_samples=200,     # default 1000 → 200
+        )
         m.fit(df[["ds","y"]])
         fut = m.make_future_dataframe(periods=horizon, freq=freq)
         fc  = m.predict(fut)
@@ -133,17 +143,19 @@ def run_prophet(df, horizon, freq):
         return fwd.reset_index(drop=True), ins.reset_index(drop=True)
     except Exception: return None, None
 
-def run_arima(df, horizon, freq):
+@st.cache_data(show_spinner=False)
+def run_arima(df_hash, df, horizon, freq):
     try:
         from statsmodels.tsa.statespace.sarimax import SARIMAX
-        s = df.set_index("ds")["y"]
+        s  = df.set_index("ds")["y"]
         sp = {"MS":12,"W":52,"B":5,"QS":4}.get(freq,12)
-        seas = (1,1,0,sp) if len(s)>=2*sp else (0,0,0,0)
-        res = SARIMAX(s, order=(1,1,1), seasonal_order=seas,
-                      enforce_stationarity=False, enforce_invertibility=False
-                      ).fit(disp=False, maxiter=200)
-        fc = res.get_forecast(steps=horizon)
-        ci = fc.conf_int(alpha=0.10)
+        # Only use seasonal if we have enough data; drop seasonal otherwise (much faster)
+        seas = (1,1,0,sp) if len(s) >= 3*sp else (0,0,0,0)
+        res  = SARIMAX(s, order=(1,1,1), seasonal_order=seas,
+                       enforce_stationarity=False, enforce_invertibility=False
+                       ).fit(disp=False, maxiter=75, method="lbfgs")  # lbfgs faster than default
+        fc  = res.get_forecast(steps=horizon)
+        ci  = fc.conf_int(alpha=0.10)
         dates = pd.date_range(start=df["ds"].max()+_off(freq), periods=horizon, freq=freq)
         fwd = pd.DataFrame({"ds":dates,"yhat":fc.predicted_mean.values,
                             "lower":ci.iloc[:,0].values,"upper":ci.iloc[:,1].values})
@@ -151,50 +163,67 @@ def run_arima(df, horizon, freq):
         return fwd.reset_index(drop=True), ins.reset_index(drop=True)
     except Exception: return None, None
 
-def run_xgboost(df, horizon, freq, n_lags=12):
+@st.cache_data(show_spinner=False)
+def run_xgboost(df_hash, df, horizon, freq, n_lags=12):
     try:
         import xgboost as xgb
         s = df["y"].values.astype(float)
         def feat(arr, lags):
             X,y=[],[]
-            for i in range(lags,len(arr)):
+            for i in range(lags, len(arr)):
                 w=arr[i-lags:i]
-                X.append([*w,np.mean(w),np.std(w),np.min(w),np.max(w),w[-1]-w[0],w[-1]/(np.mean(w)+1e-9)])
+                X.append([*w, np.mean(w), np.std(w), np.min(w), np.max(w),
+                           w[-1]-w[0], w[-1]/(np.mean(w)+1e-9)])
                 y.append(arr[i])
-            return np.array(X),np.array(y)
-        X,ya=feat(s,n_lags); sp=max(1,int(len(X)*0.15))
-        mdl=xgb.XGBRegressor(n_estimators=500,learning_rate=0.04,max_depth=4,
-                               subsample=0.8,colsample_bytree=0.8,random_state=42,verbosity=0)
-        mdl.fit(X[:-sp],ya[:-sp],eval_set=[(X[-sp:],ya[-sp:])],verbose=False)
-        Xa,_=feat(s,n_lags)
-        ins=pd.DataFrame({"ds":df["ds"].iloc[n_lags:].values,"y_pred":mdl.predict(Xa)})
-        win=list(s[-n_lags:]); yhats,lows,highs=[],[],[]; ns=np.std(s)*0.04
+            return np.array(X), np.array(y)
+        X, ya = feat(s, n_lags)
+        sp = max(1, int(len(X)*0.15))
+        mdl = xgb.XGBRegressor(
+            n_estimators=150,        # 500 → 150
+            learning_rate=0.08,      # faster convergence
+            max_depth=3,             # shallower = faster
+            subsample=0.8,
+            colsample_bytree=0.8,
+            random_state=42,
+            verbosity=0,
+            tree_method="hist",      # fastest tree method
+        )
+        mdl.fit(X[:-sp], ya[:-sp], verbose=False)
+        Xa, _ = feat(s, n_lags)
+        ins = pd.DataFrame({"ds":df["ds"].iloc[n_lags:].values, "y_pred":mdl.predict(Xa)})
+        win = list(s[-n_lags:]); yhats,lows,highs=[],[],[]; ns=np.std(s)*0.04
         for step in range(horizon):
-            w=np.array(win[-n_lags:])
-            f_=np.array([*w,np.mean(w),np.std(w),np.min(w),np.max(w),w[-1]-w[0],w[-1]/(np.mean(w)+1e-9)]).reshape(1,-1)
-            p=float(mdl.predict(f_)[0]); sp2=ns*np.sqrt(step+1)*1.645
+            w  = np.array(win[-n_lags:])
+            f_ = np.array([*w, np.mean(w), np.std(w), np.min(w), np.max(w),
+                           w[-1]-w[0], w[-1]/(np.mean(w)+1e-9)]).reshape(1,-1)
+            p  = float(mdl.predict(f_)[0]); sp2=ns*np.sqrt(step+1)*1.645
             yhats.append(p); lows.append(p-sp2); highs.append(p+sp2); win.append(p)
-        dates=pd.date_range(start=df["ds"].max()+_off(freq),periods=horizon,freq=freq)
-        fwd=pd.DataFrame({"ds":dates,"yhat":yhats,"lower":lows,"upper":highs})
+        dates = pd.date_range(start=df["ds"].max()+_off(freq), periods=horizon, freq=freq)
+        fwd   = pd.DataFrame({"ds":dates,"yhat":yhats,"lower":lows,"upper":highs})
         return fwd.reset_index(drop=True), ins.reset_index(drop=True)
     except Exception: return None, None
 
-def run_monte_carlo(df, horizon, freq, n_sims=1000, scenario="base"):
-    s=df["y"].values.astype(float); lr=np.diff(np.log(s+1e-9)); mu,sig=np.mean(lr),np.std(lr)
-    tm,ts={"best":(1.5,0.65),"base":(1.0,1.0),"worst":(0.3,1.5)}.get(scenario,(1.0,1.0))
-    np.random.seed(99); last=s[-1]; paths=np.zeros((n_sims,horizon))
-    for i in range(n_sims):
-        paths[i]=last*np.exp(np.cumsum(np.random.normal(mu*tm,sig*ts,horizon)))
-    dates=pd.date_range(start=df["ds"].max()+_off(freq),periods=horizon,freq=freq)
-    fwd=pd.DataFrame({"ds":dates,"yhat":np.percentile(paths,50,axis=0),
-                       "lower":np.percentile(paths,10,axis=0),"upper":np.percentile(paths,90,axis=0)})
+@st.cache_data(show_spinner=False)
+def run_monte_carlo(df_hash, df, horizon, freq, n_sims=1000, scenario="base"):
+    s  = df["y"].values.astype(float)
+    lr = np.diff(np.log(s+1e-9)); mu,sig=np.mean(lr),np.std(lr)
+    tm,ts = {"best":(1.5,0.65),"base":(1.0,1.0),"worst":(0.3,1.5)}.get(scenario,(1.0,1.0))
+    np.random.seed(99); last=s[-1]
+    # Vectorised — no Python loop over sims
+    shocks = np.random.normal(mu*tm, sig*ts, size=(n_sims, horizon))
+    paths  = last * np.exp(np.cumsum(shocks, axis=1))
+    dates  = pd.date_range(start=df["ds"].max()+_off(freq), periods=horizon, freq=freq)
+    fwd    = pd.DataFrame({"ds":dates,
+                            "yhat":np.percentile(paths,50,axis=0),
+                            "lower":np.percentile(paths,10,axis=0),
+                            "upper":np.percentile(paths,90,axis=0)})
     return fwd.reset_index(drop=True), paths
 
 def build_ensemble(forecasts):
     valid={k:v for k,v in forecasts.items() if v is not None}
     if len(valid)<2: return None
     base=list(valid.values())[0][["ds"]].copy()
-    base["yhat"]=np.mean([v["yhat"].values for v in valid.values()],axis=0)
+    base["yhat"] =np.mean([v["yhat"].values  for v in valid.values()],axis=0)
     base["lower"]=np.mean([v["lower"].values for v in valid.values()],axis=0)
     base["upper"]=np.mean([v["upper"].values for v in valid.values()],axis=0)
     return base
@@ -568,21 +597,22 @@ def main():
         fcs, ins_d = {}, {}
         mc_paths = mc_fwd = None
 
-        with st.spinner("Running models — may take 20–40 seconds…"):
+        with st.spinner("Running models…"):
+            df_hash = hash(df["y"].tobytes() if hasattr(df["y"], "tobytes") else str(df["y"].values.tolist()) + str(horizon) + freq)
             if use_p:
-                fwd,ins=run_prophet(df,horizon,freq)
+                fwd,ins=run_prophet(df_hash,df,horizon,freq)
                 if fwd is not None: fcs["Prophet"]=fwd; ins_d["Prophet"]=ins
                 else: st.warning("Prophet: install with `pip install prophet`")
             if use_a:
-                fwd,ins=run_arima(df,horizon,freq)
+                fwd,ins=run_arima(df_hash,df,horizon,freq)
                 if fwd is not None: fcs["ARIMA"]=fwd; ins_d["ARIMA"]=ins
                 else: st.warning("ARIMA: install statsmodels")
             if use_x:
-                fwd,ins=run_xgboost(df,horizon,freq)
+                fwd,ins=run_xgboost(df_hash,df,horizon,freq)
                 if fwd is not None: fcs["XGBoost"]=fwd; ins_d["XGBoost"]=ins
                 else: st.warning("XGBoost: install xgboost")
             if use_m:
-                mc_fwd,mc_paths=run_monte_carlo(df,horizon,freq,n_sims,mc_scen)
+                mc_fwd,mc_paths=run_monte_carlo(df_hash,df,horizon,freq,n_sims,mc_scen)
                 if mc_fwd is not None: fcs["Monte Carlo"]=mc_fwd
 
         if not fcs: st.error("No models ran. Check installations."); return
@@ -595,15 +625,16 @@ def main():
         st.plotly_chart(fig_forecast(df,fcs,ens), use_container_width=True)
 
         divider("Terminal Estimates")
-        all_models = {**fcs, **({"Ensemble":ens} if ens else {})}
-        kpi_bar([(
-            name,
-            f"{fwd['yhat'].iloc[-1]:,.0f}",
-            f"{'▲' if (fwd['yhat'].iloc[-1]-s.iloc[-1])/s.iloc[-1]>=0 else '▼'} "
-            f"{abs((fwd['yhat'].iloc[-1]-s.iloc[-1])/s.iloc[-1]*100):.1f}%",
-            POS if (fwd['yhat'].iloc[-1]-s.iloc[-1])>=0 else NEG,
-            name=="Ensemble"
-        ) for name,fwd in all_models.items()])
+        all_models = {**fcs, **({"Ensemble":ens} if ens is not None else {})}
+        kpi_items = []
+        for name, fwd in all_models.items():
+            t_val = float(fwd['yhat'].iloc[-1])
+            s_last = float(s.iloc[-1])
+            t_chg = (t_val - s_last) / s_last * 100
+            arrow = "▲" if t_chg >= 0 else "▼"
+            kpi_items.append((name, f"{t_val:,.0f}", f"{arrow} {abs(t_chg):.1f}%",
+                               POS if t_chg >= 0 else NEG, name == "Ensemble"))
+        kpi_bar(kpi_items)
 
         divider("Forecast Table")
         rows=[]
